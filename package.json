@@ -1,0 +1,13 @@
+{
+  "name": "daily-souq",
+  "version": "1.0.0",
+  "description": "DailySouq is a local multi-vendor grocery marketplace backend",
+  "types":"module",
+  "scripts": {
+    
+  },
+  "keywords": ["multi-vendor e-commerce","backend apis", "express"],
+  "author": "Monisha Rema",
+  "license": "ISC",
+  "packageManager": "pnpm@10.31.0"
+}
