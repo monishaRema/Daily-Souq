@@ -1,9 +1,12 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
+import { sendResponse } from "../../shared/utils/sendResponse";
 
 export const router = Router()
 
-router.get("/health",(req,res)=>{
-    res.status(200).json({
-        message:"Health is okay"
+router.get("/health",(_req:Request,res:Response)=>{
+    sendResponse({
+        res,
+        statusCode:200,
+        message:"Application is running successfully"
     })
 })
