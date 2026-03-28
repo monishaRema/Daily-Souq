@@ -1,9 +1,3 @@
-
----
-
-# `data-flow.md`
-
-```md
 # Data Flow
 
 ## Overview
