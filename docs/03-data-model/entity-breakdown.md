@@ -4,7 +4,8 @@
 
 This document describes the high-level schema design of DailySouq.
 
-It is intentionally written as **business-oriented schema pseudocode**, not Prisma or SQL.  
+It is intentionally written as **business-oriented schema pseudocode**, not Prisma or SQL.
+
 The goal is to explain:
 
 - what each entity represents
@@ -28,32 +29,36 @@ Represents system identity and role access.
 User
 - id
 - name
+- avatar (optional)
 - email
-- passwordHash / auth credentials
+- phone (optional)
+- passwordHash
 - role: CUSTOMER | VENDOR | ADMIN
-- accountStatus
+- status
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - authentication identity
 - base role information
 - core user account state
+- minimal profile information
 
-### Relationships
+Relationships:
 
 - one user may have one vendor profile
 - one user may have one active cart
 - one user may place many orders
 - one user may write many reviews
 
-### Important Rules
+Important rules:
 
 - role controls access
 - vendor and admin cannot use customer purchase flow
 - user is the base identity layer for all actors
+- email should be unique
 
 ---
 
@@ -70,32 +75,39 @@ Vendor
 - id
 - userId
 - shopName
-- shopImage
+- shopImage (optional)
 - shopLocation
 - businessDescription
 - approvalStatus
+- rejectionReason (optional)
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - store/business information
 - marketplace participation status
 
-### Relationships
+Relationships:
 
 - belongs to one user
 - has many vendor listings
 - has many campaigns
 - receives many orders
 
-### Important Rules
+Important rules:
 
 - vendor is not a separate auth system
 - only approved vendors can sell publicly
-- earnings are not treated as payout balance in v1
-- vendor analytics are derived from completed orders
+- one user can have at most one vendor profile
+- earnings are derived from completed orders, not stored as source of truth in v1
+
+High-level constraint:
+
+```txt
+Unique(userId)
+```
 
 ---
 
@@ -111,24 +123,33 @@ Represents admin-managed product grouping.
 Category
 - id
 - name
+- slug
 - status
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
+- category display identity
 - catalog grouping metadata
 
-### Relationships
+Relationships:
 
 - one category has many catalog products
 
-### Important Rules
+Important rules:
 
 - only admin manages categories
 - each catalog product must belong to one category
-- inactive/archived categories should not be used for new marketplace data
+- slug should be unique
+- inactive or archived categories should not be used for new marketplace data
+
+High-level constraint:
+
+```txt
+Unique(slug)
+```
 
 ---
 
@@ -145,32 +166,34 @@ CatalogProduct
 - id
 - categoryId
 - name
-- shortDescription
+- shortDescription (optional)
+- unit
 - image
 - status
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - shared product identity
 - non-vendor-specific product information
 
-### Relationships
+Relationships:
 
 - belongs to one category
 - has many vendor listings
 - may appear in many order items as reference context
 - may appear in many reviews as product context
 
-### Important Rules
+Important rules:
 
 - admin manages catalog products
 - vendor does not create catalog product in v1
 - catalog product does not own price
 - catalog product does not own stock
 - customer does not buy catalog product directly
+- unit belongs here because product measurement is shared identity data
 
 ---
 
@@ -187,28 +210,23 @@ VendorListing
 - id
 - vendorId
 - catalogProductId
-- currentPrice
+- price
 - stockQuantity
 - moderationStatus
 - sellingStatus
+- sku 
 - createdAt
 - updatedAt
 ```
 
-### Optional Fields
+Owns:
 
-```txt
-- vendorSku (optional)
-```
-
-### Owns
-
-- vendor-specific price
+- vendor-specific commercial offer
 - vendor-specific stock
 - listing moderation state
 - listing selling availability
 
-### Relationships
+Relationships:
 
 - belongs to one vendor
 - belongs to one catalog product
@@ -216,7 +234,7 @@ VendorListing
 - may appear in many order items
 - may appear in many reviews as purchase context
 
-### Important Rules
+Important rules:
 
 - this is the core marketplace join entity
 - one vendor can sell many products
@@ -226,7 +244,7 @@ VendorListing
 - price belongs only to listing
 - stock reduces only when payment succeeds and order becomes confirmed
 
-### High-Level Constraint
+High-level constraint:
 
 ```txt
 Unique(vendorId, catalogProductId)
@@ -247,27 +265,28 @@ Cart
 - id
 - customerId
 - vendorId
-- status (optional in v1 if needed)
+- status
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - active shopping session context
 - single-vendor purchase boundary
 
-### Relationships
+Relationships:
 
 - belongs to one customer
 - belongs to one vendor context while active
 - has many cart items
 
-### Important Rules
+Important rules:
 
 - one active cart per customer in v1
 - cart is single-vendor only
 - cart is not a stock reservation mechanism
+- cart vendor context must match all child listing vendor ownership
 
 ---
 
@@ -289,23 +308,23 @@ CartItem
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - selected purchasable item and quantity inside cart
 
-### Relationships
+Relationships:
 
 - belongs to one cart
 - belongs to one vendor listing
 
-### Important Rules
+Important rules:
 
 - references vendor listing, not catalog product
 - quantity must be positive
 - duplicate listing rows in same cart should be merged logically
 - stock validation happens again at checkout
 
-### High-Level Constraint
+High-level constraint:
 
 ```txt
 Unique(cartId, vendorListingId)
@@ -332,35 +351,37 @@ Order
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - who bought
 - from which vendor
 - current order lifecycle state
 - total commercial amount
 
-### Relationships
+Relationships:
 
 - belongs to one customer
 - belongs to one vendor
 - has many order items
 - has one payment in v1
 
-### Important Rules
+Important rules:
 
 - one order comes from one single-vendor cart
 - order is created before payment finalization
 - order lifecycle is separate from payment lifecycle
 - vendor can only process own confirmed orders
 
-### Lifecycle
+Lifecycle:
 
-- `PENDING_PAYMENT`
-- `PAYMENT_FAILED`
-- `CONFIRMED`
-- `PROCESSING`
-- `COMPLETED`
-- `CANCELLED`
+```txt
+PENDING_PAYMENT
+PAYMENT_FAILED
+CONFIRMED
+PROCESSING
+COMPLETED
+CANCELLED
+```
 
 ---
 
@@ -378,27 +399,29 @@ OrderItem
 - orderId
 - vendorListingId
 - catalogProductId
-- productNameSnapshot
-- unitPriceSnapshot
+- productName
+- unit
+- unitPrice
 - quantity
 - subtotal
 - createdAt
 ```
 
-### Owns
+Owns:
 
 - immutable purchase-time line item data
 
-### Relationships
+Relationships:
 
 - belongs to one order
 - references one vendor listing as source context
 - references one catalog product as identity context
 
-### Important Rules
+Important rules:
 
 - snapshot data must not depend on current listing values later
 - preserves historical correctness if listing price changes
+- preserves historical correctness if product name or unit changes later
 - one order can contain many order items
 
 ---
@@ -407,7 +430,7 @@ OrderItem
 
 ### Purpose
 
-Represents payment attempt/result separately from order.
+Represents payment result separately from order.
 
 ### High-Level Shape
 
@@ -419,24 +442,24 @@ Payment
 - amount
 - paymentMethod
 - paymentStatus
-- externalReference / fakeTransactionReference
+- providerReference
 - failureReason (optional)
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - payment state
 - attempted amount
 - payment outcome metadata
 
-### Relationships
+Relationships:
 
 - belongs to one order
 - belongs to one customer
 
-### Important Rules
+Important rules:
 
 - one order has one payment in v1
 - payment is separate from order
@@ -444,13 +467,15 @@ Payment
 - payment failure does not affect stock
 - vendor does not control payment state
 
-### Lifecycle
+Lifecycle:
 
-- `PENDING`
-- `SUCCESS`
-- `FAILED`
+```txt
+PENDING
+SUCCESS
+FAILED
+```
 
-### High-Level Constraint
+High-level constraint:
 
 ```txt
 Unique(orderId)
@@ -476,20 +501,20 @@ Review
 - orderId
 - orderItemId
 - rating
-- comment
+- comment (optional)
 - vendorReplyText (optional)
 - vendorReplyAt (optional)
 - createdAt
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - customer review content
 - one vendor reply
 - verified purchase context
 
-### Relationships
+Relationships:
 
 - belongs to one customer
 - belongs to one vendor context
@@ -497,7 +522,7 @@ Review
 - belongs to one vendor listing context
 - belongs to one order / order item context
 
-### Important Rules
+Important rules:
 
 - only customers can review
 - review allowed only after completed order
@@ -505,15 +530,13 @@ Review
 - no separate review reply table in v1
 - vendor can reply only to own review context
 
-### High-Level Constraint
-
-Depending on chosen review policy:
+High-level constraint:
 
 ```txt
 Unique(orderItemId)
 ```
 
-This means one review per purchased order item context in v1.
+This means one review per purchased order-item context in v1.
 
 ---
 
@@ -540,17 +563,17 @@ Campaign
 - updatedAt
 ```
 
-### Owns
+Owns:
 
 - campaign content
 - campaign scheduling window
 - campaign moderation state
 
-### Relationships
+Relationships:
 
 - belongs to one vendor
 
-### Important Rules
+Important rules:
 
 - one vendor can have max 5 campaigns
 - campaign requires admin approval for visibility
@@ -558,14 +581,16 @@ Campaign
 - campaign does not change checkout pricing
 - campaign visibility depends on status + date window + vendor state
 
-### Lifecycle
+Lifecycle:
 
-- `DRAFT`
-- `PENDING_APPROVAL`
-- `APPROVED`
-- `REJECTED`
-- `EXPIRED`
-- `ARCHIVED`
+```txt
+DRAFT
+PENDING_APPROVAL
+APPROVED
+REJECTED
+EXPIRED
+ARCHIVED
+```
 
 ---
 
@@ -591,23 +616,24 @@ AuditLog
 - createdAt
 ```
 
-### Owns
+Owns:
 
 - event trace metadata
 - actor context
 - resource context
-- optional before/after or supporting metadata
+- optional supporting metadata
 
-### Relationships
+Relationships:
 
 - loosely references many business resources by type + id
 - may reference user/vendor actor context
 
-### Important Rules
+Important rules:
 
 - audit log is not the source of truth
 - only important domain events should be logged
 - not every trivial update needs an audit record
+- metadata should be structured in implementation, even if represented simply here
 
 ---
 
@@ -615,41 +641,53 @@ AuditLog
 
 ### Identity
 
-- User 1 --- 0..1 Vendor
-- User 1 --- * Orders
-- User 1 --- * Reviews
-- User 1 --- 0..1 ActiveCart
+```txt
+User 1 --- 0..1 Vendor
+User 1 --- * Orders
+User 1 --- * Reviews
+User 1 --- 0..1 ActiveCart
+```
 
 ### Catalog
 
-- Category 1 --- * CatalogProducts
-- CatalogProduct 1 --- * VendorListings
-- Vendor 1 --- * VendorListings
+```txt
+Category 1 --- * CatalogProducts
+CatalogProduct 1 --- * VendorListings
+Vendor 1 --- * VendorListings
+```
 
 ### Cart
 
-- Cart 1 --- * CartItems
-- VendorListing 1 --- * CartItems
+```txt
+Cart 1 --- * CartItems
+VendorListing 1 --- * CartItems
+```
 
 ### Orders
 
-- Order 1 --- * OrderItems
-- Order 1 --- 1 Payment
-- VendorListing 1 --- * OrderItems
-- CatalogProduct 1 --- * OrderItems
-- Vendor 1 --- * Orders
+```txt
+Order 1 --- * OrderItems
+Order 1 --- 1 Payment
+VendorListing 1 --- * OrderItems
+CatalogProduct 1 --- * OrderItems
+Vendor 1 --- * Orders
+```
 
 ### Reviews
 
-- OrderItem 1 --- 0..1 Review
-- VendorListing 1 --- * Reviews
-- CatalogProduct 1 --- * Reviews
-- Vendor 1 --- * Reviews
-- User 1 --- * Reviews
+```txt
+OrderItem 1 --- 0..1 Review
+VendorListing 1 --- * Reviews
+CatalogProduct 1 --- * Reviews
+Vendor 1 --- * Reviews
+User 1 --- * Reviews
+```
 
 ### Campaigns
 
-- Vendor 1 --- * Campaigns
+```txt
+Vendor 1 --- * Campaigns
+```
 
 ---
 
@@ -698,8 +736,9 @@ CatalogProduct
 Historical purchase truth lives in:
 
 ```txt
-OrderItem.productNameSnapshot
-OrderItem.unitPriceSnapshot
+OrderItem.productName
+OrderItem.unit
+OrderItem.unitPrice
 ```
 
 Not in current listing fields.
@@ -712,7 +751,7 @@ Vendor earnings are derived from:
 Orders where status = COMPLETED
 ```
 
-Not from a mutable payout/balance system in v1.
+Not from a mutable payout or balance field in v1.
 
 ---
 
@@ -720,63 +759,103 @@ Not from a mutable payout/balance system in v1.
 
 ### User Roles
 
-- `CUSTOMER`
-- `VENDOR`
-- `ADMIN`
+```txt
+CUSTOMER
+VENDOR
+ADMIN
+```
 
-### Vendor Status
+### User Account Status
 
-- `PENDING_APPROVAL`
-- `APPROVED`
-- `REJECTED`
-- `SUSPENDED`
-- `ARCHIVED`
+```txt
+ACTIVE
+SUSPENDED
+ARCHIVED
+```
+
+### Vendor Approval Status
+
+```txt
+PENDING_APPROVAL
+APPROVED
+REJECTED
+SUSPENDED
+ARCHIVED
+```
 
 ### Category Status
 
-- `ACTIVE`
-- `INACTIVE`
-- `ARCHIVED`
+```txt
+ACTIVE
+INACTIVE
+ARCHIVED
+```
 
 ### Catalog Product Status
 
-- `ACTIVE`
-- `INACTIVE`
-- `ARCHIVED`
+```txt
+ACTIVE
+INACTIVE
+ARCHIVED
+```
 
 ### Listing Moderation Status
 
-- `DRAFT`
-- `PENDING_APPROVAL`
-- `APPROVED`
-- `REJECTED`
-- `ARCHIVED`
+```txt
+DRAFT
+PENDING_APPROVAL
+APPROVED
+REJECTED
+ARCHIVED
+```
 
 ### Listing Selling Status
 
-- `ACTIVE`
-- `INACTIVE`
+```txt
+ACTIVE
+INACTIVE
+```
+
+### Cart Status
+
+```txt
+ACTIVE
+CHECKED_OUT
+ABANDONED
+```
 
 ### Order Status
 
-- `PENDING_PAYMENT`
-- `PAYMENT_FAILED`
-- `CONFIRMED`
-- `PROCESSING`
-- `COMPLETED`
-- `CANCELLED`
+```txt
+PENDING_PAYMENT
+PAYMENT_FAILED
+CONFIRMED
+PROCESSING
+COMPLETED
+CANCELLED
+```
+
+### Payment Method
+
+```txt
+MOCK_CARD
+```
 
 ### Payment Status
 
-- `PENDING`
-- `SUCCESS`
-- `FAILED`
+```txt
+PENDING
+SUCCESS
+FAILED
+```
 
 ### Campaign Status
 
-- `DRAFT`
-- `PENDING_APPROVAL`
-- `APPROVED`
-- `REJECTED`
-- `EXPIRED`
-- `ARCHIVED`
+```txt
+DRAFT
+PENDING_APPROVAL
+APPROVED
+REJECTED
+EXPIRED
+ARCHIVED
+```
