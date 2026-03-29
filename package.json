@@ -4,13 +4,17 @@
   "description": "DailySouq is a local multi-vendor grocery marketplace backend",
   "types": "module",
   "scripts": {
-  "dev": "tsx watch src/app/server.ts",
-  "type-check": "tsc --noEmit",
-  "build": "tsc -p tsconfig.build.json",
-  "start": "node dist/app/server.js",
-  "p:gen": "prisma generate",
-  "p:migrate": "prisma migrate dev",
-  "p:studio": "prisma studio"
+    "dev": "tsx watch src/app/server.ts",
+    "type-check": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/app/server.js",
+    
+    "p:format": "prisma format",
+    "p:validate": "prisma validate",
+    "p:gen": "prisma generate",
+    "p:migrate": "prisma migrate dev",
+    "p:deploy": "prisma migrate deploy",
+    "p:studio": "prisma studio"
   },
   "keywords": [
     "multi-vendor e-commerce",
