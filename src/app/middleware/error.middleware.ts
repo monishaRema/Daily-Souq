@@ -1,5 +1,5 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
-import { AppError } from "../../shared/error/AppError.js";
+import { AppError } from "../../shared/errors/AppError.js";
 
 
 type ResponseType<T = unknown> = {
@@ -8,15 +8,15 @@ type ResponseType<T = unknown> = {
   errDetails?: T;
 };
 
-export const errorHandler: ErrorRequestHandler = (
+export const globalErrorHandler: ErrorRequestHandler = (
   err,
   _req: Request,
   res: Response,
   _next: NextFunction,
 ) => {
+  
   let statusCode = 500;
   let message = "Internal server error";
-
   let errDetails: unknown;
 
   if (err instanceof AppError) {
