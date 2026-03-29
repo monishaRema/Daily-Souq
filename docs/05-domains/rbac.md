@@ -39,6 +39,7 @@ RBAC is enforced after authentication.
 - compare vendor listings
 - view eligible campaigns
 - manage own cart
+- apply to become vendor
 - add, update, remove cart items
 - create order through checkout
 - make payment through checkout flow
