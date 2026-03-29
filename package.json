@@ -8,7 +8,6 @@
     "type-check": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/app/server.js",
-    
     "p:format": "prisma format",
     "p:validate": "prisma validate",
     "p:gen": "prisma generate",
@@ -28,6 +27,7 @@
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",

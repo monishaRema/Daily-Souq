@@ -30,7 +30,7 @@ export const registerUserSchema = z
     password: z
       .string()
       .trim()
-      .min(8, "Password must be at least 8 characters long"),
+      .min(6, "Password must be at least 6 characters long"),
   })
 
 
@@ -44,7 +44,7 @@ export const loginUserSchema = z.object({
 
     password:z.string()
     .trim()
-    .min(8,"Password must be at least 8 characters long")
+    .min(6,"Password must be at least 6 characters long")
 })
 
-export type LoginUserSchema = z.infer<typeof loginUserSchema>;
+export type LoginUserInput = z.infer<typeof loginUserSchema>;

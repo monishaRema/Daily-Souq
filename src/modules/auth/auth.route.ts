@@ -5,7 +5,6 @@ import { registerUserSchema } from './auth.validation.js';
 
 export const authRouter =  Router()
   /**
-   * /register
 /auth/login
 /auth/refresh-token
 /auth/logout

@@ -4,7 +4,7 @@ import { authService } from "./auth.service";
 
 async function registerUser(req:Request,res:Response) {
 
-    const user = await authService.registerUserService()
+    const user = await authService.registerUser(req.body)
 
     sendResponse({
         res,
