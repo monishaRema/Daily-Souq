@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { ZodSchema } from "zod/v3";
+import { z } from "zod";
 import { AppError } from "../../shared/errors/AppError";
 
 export const validateRequest = (
-  schema: ZodSchema,
+  schema: z.ZodTypeAny,
   reqParts: "body" | "params" | "query",
 ) => {
   return (req: Request, _res: Response, next: NextFunction) => {
