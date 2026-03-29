@@ -1,0 +1,103 @@
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum CatalogProductStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+enum ProductUnit {
+  KG
+  GRAM
+  LITER
+  ML
+  PCS
+  PACK
+  DOZEN
+}
+
+enum ListingModerationStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum ListingSellingStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+model Category {
+  id        String         @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String         @unique
+  status    CategoryStatus @default(ACTIVE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  products  CatalogProduct[]
+
+  @@index([name])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CatalogProduct {
+  id               String               @id @default(uuid()) @db.Uuid
+  categoryId       String               @db.Uuid
+  name             String
+  shortDescription String?
+  unit             ProductUnit
+  image            String
+  status           CatalogProductStatus @default(ACTIVE)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  category         Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  listings         VendorListing[]
+  orderItems       OrderItem[]
+  reviews          Review[]
+
+  @@index([categoryId])
+  @@index([name])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model VendorListing {
+  id                String                   @id @default(uuid()) @db.Uuid
+  vendorId          String                   @db.Uuid
+  catalogProductId  String                   @db.Uuid
+
+  price             Decimal                  @db.Decimal(10, 2)
+  stockQuantity     Int
+  sku               String
+
+  moderationStatus  ListingModerationStatus  @default(DRAFT)
+  sellingStatus     ListingSellingStatus     @default(INACTIVE)
+
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  vendor            Vendor                   @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  catalogProduct    CatalogProduct           @relation(fields: [catalogProductId], references: [id], onDelete: Restrict)
+
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+  reviews           Review[]
+
+  @@unique([vendorId, catalogProductId])
+  @@unique([vendorId, sku])
+
+  @@index([vendorId])
+  @@index([catalogProductId])
+  @@index([moderationStatus])
+  @@index([sellingStatus])
+  @@index([createdAt])
+}

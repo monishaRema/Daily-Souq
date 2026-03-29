@@ -1,0 +1,29 @@
+enum AuditActorRole {
+  CUSTOMER
+  VENDOR
+  ADMIN
+  SYSTEM
+}
+
+model AuditLog {
+  id            String         @id @default(uuid()) @db.Uuid
+  eventType     String
+  entityType    String
+  entityId      String         @db.Uuid
+  actorUserId   String?        @db.Uuid
+  actorVendorId String?        @db.Uuid
+  actorRole     AuditActorRole
+  message       String
+  metadata      Json?
+  createdAt     DateTime       @default(now())
+
+  actorUser     User?          @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  actorVendor   Vendor?        @relation(fields: [actorVendorId], references: [id], onDelete: Restrict)
+
+  @@index([eventType])
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@index([actorVendorId])
+  @@index([actorRole])
+  @@index([createdAt])
+}

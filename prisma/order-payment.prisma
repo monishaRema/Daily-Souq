@@ -1,0 +1,122 @@
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_FAILED
+  CONFIRMED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  MOCK_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+
+
+model Cart {
+  id         String     @id @default(uuid()) @db.Uuid
+  customerId String     @unique @db.Uuid
+  vendorId   String?    @db.Uuid
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  customer   User       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vendor     Vendor?    @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  items      CartItem[]
+
+  @@index([vendorId])
+  @@index([createdAt])
+}
+
+
+model CartItem {
+  id              String         @id @default(uuid()) @db.Uuid
+  cartId          String         @db.Uuid
+  vendorListingId String         @db.Uuid
+  quantity        Int
+  unitPrice       Decimal        @db.Decimal(10, 2)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  cart            Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  vendorListing   VendorListing  @relation(fields: [vendorListingId], references: [id], onDelete: Restrict)
+
+  @@unique([cartId, vendorListingId])
+  @@index([cartId])
+  @@index([vendorListingId])
+  @@index([createdAt])
+}
+
+
+model Order {
+  id          String      @id @default(uuid()) @db.Uuid
+  customerId  String      @db.Uuid
+  vendorId    String      @db.Uuid
+  orderStatus OrderStatus @default(PENDING_PAYMENT)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer    User        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vendor      Vendor      @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  items       OrderItem[]
+  payment     Payment?
+  reviews     Review[]
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([orderStatus])
+  @@index([createdAt])
+}
+
+
+model OrderItem {
+  id               String         @id @default(uuid()) @db.Uuid
+  orderId          String         @db.Uuid
+  vendorListingId  String         @db.Uuid
+  catalogProductId String         @db.Uuid
+  productName      String
+  unit             ProductUnit
+  unitPrice        Decimal        @db.Decimal(10, 2)
+  quantity         Int
+  subtotal         Decimal        @db.Decimal(10, 2)
+  createdAt        DateTime       @default(now())
+
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorListing    VendorListing  @relation(fields: [vendorListingId], references: [id], onDelete: Restrict)
+  catalogProduct   CatalogProduct @relation(fields: [catalogProductId], references: [id], onDelete: Restrict)
+  review           Review?
+
+  @@unique([orderId, vendorListingId])
+  @@index([orderId])
+  @@index([vendorListingId])
+  @@index([catalogProductId])
+  @@index([createdAt])
+}
+
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  orderId           String        @unique @db.Uuid
+  customerId        String        @db.Uuid
+  amount            Decimal       @db.Decimal(10, 2)
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus @default(PENDING)
+  providerReference String?
+  failureReason     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  customer          User          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}

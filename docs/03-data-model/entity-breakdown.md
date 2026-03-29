@@ -265,7 +265,6 @@ Cart
 - id
 - customerId
 - vendorId
-- status
 - createdAt
 - updatedAt
 ```
@@ -816,13 +815,7 @@ ACTIVE
 INACTIVE
 ```
 
-### Cart Status
 
-```txt
-ACTIVE
-CHECKED_OUT
-ABANDONED
-```
 
 ### Order Status
 

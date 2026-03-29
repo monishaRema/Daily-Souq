@@ -1,0 +1,57 @@
+enum VendorApprovalStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SUSPENDED
+  ARCHIVED
+}
+
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String
+  avatar       String?
+  email        String     @unique
+  phone        String?
+  passwordHash String
+  role         UserRole   @default(CUSTOMER)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  vendor       Vendor?
+  cart         Cart?
+  orders       Order[]
+  reviews      Review[]
+  payments     Payment[]
+  auditLogs    AuditLog[]
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Vendor {
+  id                  String               @id @default(uuid()) @db.Uuid
+  userId              String               @unique @db.Uuid
+  shopName            String
+  shopImage           String?
+  shopLocation        String
+  businessDescription String
+  approvalStatus      VendorApprovalStatus @default(PENDING_APPROVAL)
+  rejectionReason     String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  listings            VendorListing[]
+  carts               Cart[]
+  orders              Order[]
+  campaigns           Campaign[]
+  reviews             Review[]
+  auditLogs           AuditLog[]
+
+  @@index([shopName])
+  @@index([approvalStatus])
+  @@index([createdAt])
+}

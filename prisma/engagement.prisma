@@ -1,0 +1,63 @@
+
+enum CampaignStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  EXPIRED
+  ARCHIVED
+}
+
+model Review {
+  id               String         @id @default(uuid()) @db.Uuid
+  customerId       String         @db.Uuid
+  vendorId         String         @db.Uuid
+  catalogProductId String         @db.Uuid
+  vendorListingId  String         @db.Uuid
+  orderId          String         @db.Uuid
+  orderItemId      String         @unique @db.Uuid
+  rating           Int
+  comment          String?
+  vendorReplyText  String?
+  vendorReplyAt    DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  customer         User           @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vendor           Vendor         @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  catalogProduct   CatalogProduct @relation(fields: [catalogProductId], references: [id], onDelete: Restrict)
+  vendorListing    VendorListing  @relation(fields: [vendorListingId], references: [id], onDelete: Restrict)
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  orderItem        OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([catalogProductId])
+  @@index([vendorListingId])
+  @@index([orderId])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+
+model Campaign {
+  id               String         @id @default(uuid()) @db.Uuid
+  vendorId         String         @db.Uuid
+  title            String
+  shortDescription String
+  image            String
+  startDate        DateTime
+  endDate          DateTime
+  campaignStatus   CampaignStatus @default(DRAFT)
+  rejectionReason  String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  vendor           Vendor         @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+
+  @@index([vendorId])
+  @@index([campaignStatus])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([createdAt])
+}
