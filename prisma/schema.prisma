@@ -1,4 +1,10 @@
-
+/// <reference path="./shared.enums.prisma" />
+/// <reference path="./identity.prisma" />
+/// <reference path="./catalog.prisma" />
+/// <reference path="./cart.prisma" />
+/// <reference path="./order-payment.prisma" />
+/// <reference path="./engagement.prisma" />
+/// <reference path="./observability.prisma" />
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +14,3 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-
