@@ -15,7 +15,15 @@ const safeUserSelect  = {
 } satisfies Prisma.UserSelect;
 
 async function findUserByEmail(email: string) {
-  return await prisma.user.findUnique({
+  return prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+    select:safeUserSelect
+  });
+}
+async function findUserByEmailAuth(email: string) {
+  return prisma.user.findUnique({
     where: {
       email: email,
     },
@@ -23,7 +31,7 @@ async function findUserByEmail(email: string) {
 }
 
 async function createUser(data: Prisma.UserCreateInput) {
-  return await prisma.user.create({
+  return prisma.user.create({
     data: data,
     select: safeUserSelect ,
   });
@@ -32,4 +40,5 @@ async function createUser(data: Prisma.UserCreateInput) {
 export const authRepo = {
   findUserByEmail,
   createUser,
+  findUserByEmailAuth
 };

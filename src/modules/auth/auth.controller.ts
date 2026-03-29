@@ -14,8 +14,18 @@ async function registerUser(req:Request,res:Response) {
     })
 }
 
+async function login(req:Request,res:Response) {
+    const user = await authService.loginUser(req.body)
 
+    sendResponse({
+        res,
+        statusCode:200,
+        message: "Login successful",
+        data:user
+    })
+}
 
 export const authController = {
-    registerUser
+    registerUser,
+    login
 }

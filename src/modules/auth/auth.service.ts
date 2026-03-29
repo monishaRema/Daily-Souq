@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { AppError } from "../../shared/errors/AppError";
 import { authRepo } from "./auth.repository.js";
-import { RegisterUserInput } from "./auth.validation.js";
+import { LoginUserInput, RegisterUserInput } from "./auth.validation.js";
 import { config } from "../../app/config/env.js";
 import { UserRole, UserStatus } from "../../../generated/prisma/enums";
 
@@ -30,6 +30,31 @@ async function registerUser(payload: RegisterUserInput) {
   return user;
 }
 
+async function loginUser(payload:LoginUserInput){
+
+   const existingUser = await authRepo.findUserByEmailAuth(payload.email);
+
+  if (!existingUser) {
+    throw new AppError(401, "No user found with this email");
+  }
+
+  if(existingUser.status !== UserStatus.ACTIVE){
+    throw new AppError(403, "Forbidden");
+  }
+
+  const isPasswordMatched = await bcrypt.compare(payload.password,existingUser.passwordHash)
+
+  if(!isPasswordMatched){
+    throw new AppError(403, "Invalid password");
+  }
+
+  
+
+
+
+}
+
 export const authService = {
   registerUser,
+  loginUser
 };
