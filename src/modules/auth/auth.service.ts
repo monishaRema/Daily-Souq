@@ -4,6 +4,8 @@ import { authRepo } from "./auth.repository.js";
 import { LoginUserInput, RegisterUserInput } from "./auth.validation.js";
 import { config } from "../../app/config/env.js";
 import { UserRole, UserStatus } from "../../../generated/prisma/enums";
+import { JwtPayload } from "./auth.types";
+import { generateAccessToken, generateRefreshToken } from "./auth.utils";
 
 async function registerUser(payload: RegisterUserInput) {
   const existingUser = await authRepo.findUserByEmail(payload.email);
@@ -30,31 +32,53 @@ async function registerUser(payload: RegisterUserInput) {
   return user;
 }
 
-async function loginUser(payload:LoginUserInput){
+async function login(payload: LoginUserInput) {
+  const user = await authRepo.findUserByEmailAuth(payload.email);
 
-   const existingUser = await authRepo.findUserByEmailAuth(payload.email);
-
-  if (!existingUser) {
+  if (!user) {
     throw new AppError(401, "No user found with this email");
   }
 
-  if(existingUser.status !== UserStatus.ACTIVE){
-    throw new AppError(403, "Forbidden");
+  if (user.status !== UserStatus.ACTIVE) {
+    throw new AppError(403, "This account is not allowed to log in");
   }
 
-  const isPasswordMatched = await bcrypt.compare(payload.password,existingUser.passwordHash)
+  const isPasswordMatched = await bcrypt.compare(
+    payload.password,
+    user.passwordHash,
+  );
 
-  if(!isPasswordMatched){
-    throw new AppError(403, "Invalid password");
+  if (!isPasswordMatched) {
+    throw new AppError(401, "Invalid password");
   }
 
-  
+  const tokenPayload: JwtPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
 
+  const accessToken = generateAccessToken(tokenPayload);
+  const refreshToken = generateRefreshToken(tokenPayload);
 
-
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    },
+    accessToken,
+    refreshToken,
+  };
 }
 
 export const authService = {
   registerUser,
-  loginUser
+  login,
 };
