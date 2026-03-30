@@ -2,9 +2,6 @@ import jwt from "jsonwebtoken";
 import { config } from "../../app/config/env";
 import { JwtPayload } from "./auth.types";
 
-
-
-
 export const generateAccessToken = (payload: JwtPayload) => {
   const options: jwt.SignOptions = {
     expiresIn:

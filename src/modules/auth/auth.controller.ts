@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { sendResponse } from "../../shared/utils/sendResponse";
 import { authService } from "./auth.service";
 import { config } from "../../app/config/env";
+import { AppError } from "../../shared/errors/AppError";
 
 async function registerUser(req: Request, res: Response) {
   const user = await authService.registerUser(req.body);
@@ -35,7 +36,22 @@ async function login(req: Request, res: Response) {
   });
 }
 
+async function getMe(req: Request, res: Response) {
+  if (!req.user) {
+    throw new AppError(401, "Unauthorized");
+  }
+
+  const user = await authService.getMe(req.user.userId);
+  sendResponse({
+    res,
+    statusCode: 200,
+    message: "Fetched user data successfully",
+    data: "",
+  });
+}
+
 export const authController = {
   registerUser,
   login,
+  getMe,
 };

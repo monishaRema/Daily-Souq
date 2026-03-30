@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-export const registerUserSchema = z
-  .object({
+export const registerUserSchema = z.object({
     name: z
       .string()
       .trim()
@@ -32,7 +31,6 @@ export const registerUserSchema = z
       .trim()
       .min(6, "Password must be at least 6 characters long"),
   })
-
 
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 

@@ -37,8 +37,18 @@ async function createUser(data: Prisma.UserCreateInput) {
   });
 }
 
+async function findSafeUserById(id:string){
+  return prisma.user.findUnique({
+    where: {
+      id: id,
+    },
+    select:safeUserSelect
+  });
+}
+
 export const authRepo = {
   findUserByEmail,
   createUser,
-  findUserByEmailAuth
+  findUserByEmailAuth,
+  findSafeUserById
 };

@@ -78,7 +78,12 @@ async function login(payload: LoginUserInput) {
   };
 }
 
+async function getMe(usedId:string) {
+  
+}
+
 export const authService = {
   registerUser,
   login,
+  getMe
 };
