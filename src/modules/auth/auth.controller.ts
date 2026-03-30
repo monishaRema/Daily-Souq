@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { sendResponse } from "../../shared/utils/sendResponse";
-import { authService } from "./auth.service";
-import { config } from "../../app/config/env";
-import { AppError } from "../../shared/errors/AppError";
+import { sendResponse } from "../../shared/utils/sendResponse.js";
+import { authService } from "./auth.service.js";
+import { config } from "../../app/config/env.js";
+import { AppError } from "../../shared/errors/AppError.js";
 
 async function registerUser(req: Request, res: Response) {
   const user = await authService.registerUser(req.body);

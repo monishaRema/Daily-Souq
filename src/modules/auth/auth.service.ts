@@ -1,11 +1,11 @@
 import bcrypt from "bcryptjs";
-import { AppError } from "../../shared/errors/AppError";
+import { AppError } from "../../shared/errors/AppError.js";
 import { authRepo } from "./auth.repository.js";
 import { LoginUserInput, RegisterUserInput } from "./auth.validation.js";
 import { config } from "../../app/config/env.js";
-import { UserRole, UserStatus } from "../../../generated/prisma/enums";
-import { JwtPayload } from "./auth.types";
-import { generateAccessToken, generateRefreshToken } from "./auth.utils";
+import { UserRole, UserStatus } from "../../../generated/prisma/enums.js";
+import { JwtPayload } from "./auth.types.js";
+import { generateAccessToken, generateRefreshToken } from "./auth.utils.js";
 
 async function registerUser(payload: RegisterUserInput) {
   const existingUser = await authRepo.findUserByEmail(payload.email);
