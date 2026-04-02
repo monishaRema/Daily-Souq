@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { sendResponse } from "../../shared/utils/sendResponse.js";
 import { authService } from "./auth.service.js";
-import { config } from "../../app/config/env.js";
 import { AppError } from "../../shared/errors/AppError.js";
 import { setCookie } from "./auth.utils.js";
 
@@ -45,12 +44,32 @@ async function getMe(req: Request, res: Response) {
     res,
     statusCode: 200,
     message: "Fetched user data successfully",
-    data: "",
+    data: user,
   });
+}
+
+async function refreshToken(req:Request,res:Response) {
+
+  const refreshToken = req.cookies.refreshToken
+
+  if(!refreshToken){
+    throw new AppError(401,"Refresh token required")
+  }
+
+   const tokenResult = await authService.refreshToken(refreshToken);
+
+  setCookie(res,"accessToken",tokenResult.accessToken,  60 * 60 * 1000)
+
+  sendResponse({
+    res,
+    statusCode: 200,
+    message: "Access token refreshed successfully",
+  })
 }
 
 export const authController = {
   registerUser,
   login,
   getMe,
+  refreshToken
 };

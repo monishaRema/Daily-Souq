@@ -21,4 +21,4 @@ authRouter.post("/login",validateRequest(loginSchema,"body"),authController.logi
 
 authRouter.get("/me",authenticate, authController.getMe);
 
-
+authRouter.post("/refresh-token", authController.refreshToken)

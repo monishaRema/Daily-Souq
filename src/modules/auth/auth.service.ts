@@ -1,8 +1,10 @@
+
 import bcrypt from "bcryptjs";
 import { AppError } from "../../shared/errors/AppError.js";
 import { authRepo } from "./auth.repository.js";
 import { LoginUserInput, RegisterUserInput } from "./auth.validation.js";
 import { config } from "../../app/config/env.js";
+import jwt from "jsonwebtoken";
 import { UserRole, UserStatus } from "../../../generated/prisma/enums.js";
 import { JwtPayload } from "./auth.types.js";
 import { generateAccessToken, generateRefreshToken } from "./auth.utils.js";
@@ -78,12 +80,48 @@ async function login(payload: LoginUserInput) {
   };
 }
 
-async function getMe(usedId:string) {
-  
+async function getMe(id: string) {
+  const user = await authRepo.findSafeUserById(id)
+
+  if(!user){
+    throw new AppError(404,"User not found with this id")
+  }
+
+  return user
+
+}
+
+async function refreshToken(token: string) {
+  try {
+    const decoded = jwt.verify(token, config.JWT_REFRESH_SECRET) as JwtPayload;
+
+    const user = await authRepo.findSafeUserById(decoded.userId);
+
+    if (!user) {
+      throw new AppError(404, "User not found");
+    }
+
+    if (user.status !== "ACTIVE") {
+      throw new AppError(403, "This account is not allowed");
+    }
+
+    const accessToken = generateAccessToken({
+       userId: user.id, 
+       email:user.email,
+       role:user.role
+       });
+
+
+       return {accessToken}
+  } catch(error) {
+    console.error(error)
+    throw new AppError(401, "Refresh token is invalid or expired");
+  }
 }
 
 export const authService = {
   registerUser,
   login,
-  getMe
+  getMe,
+  refreshToken,
 };
