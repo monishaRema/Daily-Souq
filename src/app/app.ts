@@ -1,6 +1,7 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { router } from "./router/index.js";
 import { notFound } from "./middleware/notFound.middleware.js";
 import { globalErrorHandler } from "./middleware/error.middleware.js";
@@ -16,7 +17,7 @@ app.use(
   }),
 );
 app.use(express.json());
-
+app.use(cookieParser())
 // routes
 app.use("/api/v1", router);
 
