@@ -34,3 +34,12 @@ export const setCookie = (res:Response,cookieName:string,token:string,age:number
     maxAge: age,
   });
 }
+
+export const clearCookie = (res:Response,cookieName:string) => {
+  res.clearCookie(cookieName, {
+  httpOnly: true,
+  secure: config.isProduction,
+  sameSite: "strict",
+});
+
+}

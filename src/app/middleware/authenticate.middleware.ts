@@ -12,7 +12,7 @@ export const authenticate = (
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
-    return next(new AppError(401, "Unauthorized"));
+    return next(new AppError(401, "Access token required"));
   }
 
   try {

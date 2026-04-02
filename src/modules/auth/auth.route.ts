@@ -5,11 +5,7 @@ import {  loginSchema, registerUserSchema } from "./auth.validation.js";
 import { authenticate } from "../../app/middleware/authenticate.middleware.js";
 
 export const authRouter = Router();
-/**
-/auth/login
-/auth/refresh-token
-/auth/logout
-   */
+
 
 authRouter.post(
   "/register",
@@ -22,3 +18,5 @@ authRouter.post("/login",validateRequest(loginSchema,"body"),authController.logi
 authRouter.get("/me",authenticate, authController.getMe);
 
 authRouter.post("/refresh-token", authController.refreshToken)
+authRouter.post("/logout",authController.logout)
+
