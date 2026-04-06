@@ -26,3 +26,11 @@ app.use(notFound);
 
 // global error handler
 app.use(globalErrorHandler);
+
+
+
+/**
+ * auth => register => login => me => logout
+ * middleware => validate req => authenticate => not found => global error handler
+ */
+
