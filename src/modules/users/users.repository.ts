@@ -1,4 +1,5 @@
 import { Prisma } from "../../../generated/prisma/client.js";
+import { UserUpdateInput } from "../../../generated/prisma/models.js";
 import { prisma } from "../../shared/lib/prisma.js";
 
 const safeUserSelect = {
@@ -23,6 +24,17 @@ async function getMyProfile(id: string) {
   });
 }
 
+async function updateMyProfile(id: string, data: Partial<UserUpdateInput>) {
+  return prisma.user.update({
+    data,
+    where: {
+      id,
+    },
+    select: safeUserSelect,
+  });
+}
+
 export const userRepo = {
   getMyProfile,
+  updateMyProfile,
 };

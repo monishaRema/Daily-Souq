@@ -18,6 +18,27 @@ async function getMyProfile(req:Request,res:Response){
 }
 
 
+async function updateMyProfile (req:Request,res:Response){
+
+  if(!req.user){
+    throw new AppError(401,"Unauthorized")
+  }
+  const updatedProfile = await userService.updateMyProfile(
+    req.user.userId,
+    req.body
+  );
+
+  sendResponse({
+    res,
+    statusCode:200,
+    message: "User profile updated successfully",
+    data:updatedProfile
+  })
+
+}
+
+
 export const userController = {
-    getMyProfile
+    getMyProfile,
+    updateMyProfile
 }

@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { userController } from "./users.controller.js";
+import { validateRequest } from "../../app/middleware/validation.middleware.js";
+import { updateMyProfileSchema } from "./users.validation.js";
 
 export const userRouter = Router()
 
@@ -9,11 +11,11 @@ userRouter.get(
   userController.getMyProfile
 );
 
-// userRouter.patch(
-//   "/profile",
-//   validateRequest(updateMyProfileSchema, "body"),
-//   userController.updateMyProfile
-// );
+userRouter.patch(
+  "/profile",
+  validateRequest(updateMyProfileSchema, "body"),
+  userController.updateMyProfile
+);
 
 // userRouter.get(
 //   "/",
