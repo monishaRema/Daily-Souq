@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { userController } from "./users.controller.js";
 import { validateRequest } from "../../app/middleware/validation.middleware.js";
-import { updateMyProfileSchema } from "./users.validation.js";
+import { updateMyProfileSchema, updatePasswordSchema } from "./users.validation.js";
 
 export const userRouter = Router()
 
@@ -16,6 +16,15 @@ userRouter.patch(
   validateRequest(updateMyProfileSchema, "body"),
   userController.updateMyProfile
 );
+
+
+userRouter.patch(
+  "/password",
+  validateRequest(updatePasswordSchema, "body"),
+  userController.updatePassword
+);
+
+
 
 // userRouter.get(
 //   "/",

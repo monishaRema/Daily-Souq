@@ -34,7 +34,32 @@ async function updateMyProfile(id: string, data: Partial<UserUpdateInput>) {
   });
 }
 
+async function findUserWithPasswordById(id:string){
+  return prisma.user.findUnique({
+    where:{
+      id
+    }
+  })
+}
+
+
+async function updatePassword(id:string, hashedPass:string) {
+  return prisma.user.update({
+    data:{
+      passwordHash:hashedPass
+    },
+    where:{
+      id
+    },
+    select: safeUserSelect,
+
+  })
+  
+}
+
 export const userRepo = {
   getMyProfile,
   updateMyProfile,
+  updatePassword,
+  findUserWithPasswordById
 };

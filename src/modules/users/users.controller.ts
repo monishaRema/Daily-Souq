@@ -37,8 +37,23 @@ async function updateMyProfile (req:Request,res:Response){
 
 }
 
+async function updatePassword (req:Request,res:Response){
+
+if(!req.user){
+  throw new AppError(401,"Unauthorized")
+}
+
+  const result = await userService.updatePassword(req.user.userId,req.body)
+
+  sendResponse({
+    res,
+    statusCode:200,
+    message:"Password updated successfully"
+  })
+}
 
 export const userController = {
     getMyProfile,
-    updateMyProfile
+    updateMyProfile,
+    updatePassword
 }

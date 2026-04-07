@@ -1,7 +1,9 @@
+import { config } from "../../app/config/env.js";
 import { AppError } from "../../shared/errors/AppError.js";
 import { userRepo } from "./users.repository.js";
 import { UpdateProfileDataType } from "./users.types.js";
-import { UpdateMyProfileType } from "./users.validation.js";
+import { UpdateMyProfileType, UpdatePasswordType } from "./users.validation.js";
+import bcrypt from "bcryptjs";
 
 async function getMyProfile(id: string) {
   const user = await userRepo.getMyProfile(id);
@@ -37,7 +39,37 @@ async function updateMyProfile(id: string, payload: UpdateMyProfileType) {
   return updatedProfile;
 }
 
+async function updatePassword(id: string, payload: UpdatePasswordType) {
+  const user = await userRepo.findUserWithPasswordById(id);
+
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw new AppError(401, "You are not authorized to update password");
+  }
+
+  const isPasswordMatched = await bcrypt.compare(
+    payload.oldPassword,
+    user.passwordHash,
+  );
+
+  if (!isPasswordMatched) {
+    throw new AppError(400, "Your old password is incorrect");
+  }
+
+  const passwordHash = await bcrypt.hash(
+    payload.newPassword,
+    config.BCRYPT_SALT_ROUNDS,
+  );
+  const result = await userRepo.updatePassword(id, passwordHash);
+
+  return result;
+}
+
 export const userService = {
   getMyProfile,
   updateMyProfile,
+  updatePassword,
 };
