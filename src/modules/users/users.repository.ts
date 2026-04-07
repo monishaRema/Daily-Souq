@@ -1,5 +1,5 @@
 import { SortOrder } from "./../../../generated/prisma/internal/prismaNamespace";
-import { Prisma } from "../../../generated/prisma/client.js";
+import { Prisma, UserStatus } from "../../../generated/prisma/client.js";
 import { UserUpdateInput } from "../../../generated/prisma/models.js";
 import { prisma } from "../../shared/lib/prisma.js";
 
@@ -70,12 +70,33 @@ async function getAllUsers(take: number, skip: number) {
   return {
     data: users,
     meta: {
-      page: (skip / take) + 1,
+      page: skip / take + 1,
       limit: take,
       totalItems: totalUserCount,
       totalPages: Math.ceil(totalUserCount / take),
     },
   };
+}
+
+async function getSingleUser(id: string) {
+  return await prisma.user.findUnique({
+    where: {
+      id,
+    },
+    select: safeUserSelect,
+  });
+}
+
+async function updateUserStatus(id: string, status: UserStatus) {
+  return await prisma.user.update({
+    data: {
+      status: status,
+    },
+    where: {
+      id,
+    },
+    select: safeUserSelect,
+  });
 }
 
 export const userRepo = {
@@ -84,4 +105,6 @@ export const userRepo = {
   updatePassword,
   findUserWithPasswordById,
   getAllUsers,
+  getSingleUser,
+  updateUserStatus,
 };

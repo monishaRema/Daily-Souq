@@ -2,59 +2,59 @@ import { Request, Response } from "express";
 import { sendResponse } from "../../shared/utils/sendResponse.js";
 import { AppError } from "../../shared/errors/AppError.js";
 import { userService } from "./users.service.js";
-import { UserQueryType } from "./users.validation.js";
+import {
+  IdParamsType,
+  UpdateUserStatusType,
+  UserQueryType,
+} from "./users.validation.js";
 
-async function getMyProfile(req:Request,res:Response){
-     if (!req.user) {
-        throw new AppError(401, "Unauthorized");
-      }
-    
-      const user = await userService.getMyProfile(req.user.userId);
-      sendResponse({
-        res,
-        statusCode: 200,
-        message: "Profile retrieved successfully",
-        data: user,
-      });
+async function getMyProfile(req: Request, res: Response) {
+  if (!req.user) {
+    throw new AppError(401, "Unauthorized");
+  }
+
+  const user = await userService.getMyProfile(req.user.userId);
+  sendResponse({
+    res,
+    statusCode: 200,
+    message: "Profile retrieved successfully",
+    data: user,
+  });
 }
 
-
-async function updateMyProfile (req:Request,res:Response){
-
-  if(!req.user){
-    throw new AppError(401,"Unauthorized")
+async function updateMyProfile(req: Request, res: Response) {
+  if (!req.user) {
+    throw new AppError(401, "Unauthorized");
   }
   const updatedProfile = await userService.updateMyProfile(
     req.user.userId,
-    req.body
+    req.body,
   );
 
   sendResponse({
     res,
-    statusCode:200,
+    statusCode: 200,
     message: "User profile updated successfully",
-    data:updatedProfile
-  })
-
+    data: updatedProfile,
+  });
 }
 
-async function updatePassword (req:Request,res:Response){
+async function updatePassword(req: Request, res: Response) {
+  if (!req.user) {
+    throw new AppError(401, "Unauthorized");
+  }
 
-if(!req.user){
-  throw new AppError(401,"Unauthorized")
-}
-
-  await userService.updatePassword(req.user.userId,req.body)
+  await userService.updatePassword(req.user.userId, req.body);
 
   sendResponse({
     res,
-    statusCode:200,
-    message:"Password updated successfully"
-  })
+    statusCode: 200,
+    message: "Password updated successfully",
+  });
 }
 
 async function getAllUsers(req: Request, res: Response) {
-  const query = res.locals.validated.query
+  const query = res.locals.validated.query;
 
   const result = await userService.getAllUsers(query as UserQueryType);
 
@@ -63,13 +63,37 @@ async function getAllUsers(req: Request, res: Response) {
     statusCode: 200,
     message: "Fetched all users successfully",
     data: result.data,
-    meta: result.meta
+    meta: result.meta,
+  });
+}
+async function getSingleUser(req: Request, res: Response) {
+  const user = await userService.getSingleUser(req.params as IdParamsType);
+  sendResponse({
+    res,
+    statusCode: 200,
+    message: "Fetched user successfully",
+    data: user,
   });
 }
 
-export const userController = {
-    getMyProfile,
-    updateMyProfile,
-    updatePassword,
-    getAllUsers
+async function updateUserStatus(req: Request, res: Response) {
+  const updatedUser = await userService.updateUserStatus(
+    req.params as IdParamsType,
+    req.body as UpdateUserStatusType,
+  );
+
+  sendResponse({
+    res,
+    statusCode: 200,
+    message: "User status updated successfully",
+    data: updatedUser,
+  });
 }
+export const userController = {
+  getMyProfile,
+  updateMyProfile,
+  updatePassword,
+  getAllUsers,
+  getSingleUser,
+  updateUserStatus,
+};

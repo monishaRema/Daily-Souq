@@ -1,9 +1,10 @@
 
+
 import { config } from "../../app/config/env.js";
 import { AppError } from "../../shared/errors/AppError.js";
 import { userRepo } from "./users.repository.js";
 import { UpdateProfileDataType } from "./users.types.js";
-import { UpdateMyProfileType, UpdatePasswordType, UserQueryType } from "./users.validation.js";
+import { IdParamsType, UpdateMyProfileType, UpdatePasswordType, UpdateUserStatusType, UserQueryType } from "./users.validation.js";
 import bcrypt from "bcryptjs";
 
 async function getMyProfile(id: string) {
@@ -77,9 +78,42 @@ async function getAllUsers(query: UserQueryType) {
   return await userRepo.getAllUsers(take, skip );
 }
 
+async function getSingleUser(payload:IdParamsType){
+
+  const user = await userRepo.getSingleUser(payload.id)
+
+  if(!user){
+    throw new AppError(404, "User not found with this id")
+  }
+
+  return user;
+
+}
+
+async function updateUserStatus(params:IdParamsType,payload:UpdateUserStatusType){
+
+
+  const user = await userRepo.findUserWithPasswordById(params.id)
+  if(!user){
+    throw new AppError(404, "User not found with this id")
+  }
+
+  if(user.status === "ARCHIVED"){
+    throw new AppError(400, "Archived user cannot be updated");
+  }
+
+    const result = await userRepo.updateUserStatus(params.id,payload.status)
+
+    return result
+}
+
+
+
 export const userService = {
   getMyProfile,
   updateMyProfile,
   updatePassword,
-  getAllUsers
+  getAllUsers,
+  getSingleUser,
+  updateUserStatus
 };

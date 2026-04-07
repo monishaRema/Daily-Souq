@@ -1,48 +1,58 @@
 import { Router } from "express";
 import { userController } from "./users.controller.js";
 import { validateRequest } from "../../app/middleware/validation.middleware.js";
-import { updateMyProfileSchema, updatePasswordSchema, userQueryValidate } from "./users.validation.js";
+import {
+  updateMyProfileSchema,
+  updatePasswordSchema,
+  updateUserStatusSchema,
+  userQueryValidate,
+  validateIdSchema,
+} from "./users.validation.js";
 import { authorize } from "../../app/middleware/authorize.middleware.js";
 
-export const userRouter = Router()
+export const userRouter = Router();
 
-
-userRouter.get(
-  "/profile",
-  userController.getMyProfile
-);
+userRouter.get("/profile", userController.getMyProfile);
 
 userRouter.patch(
   "/profile",
   validateRequest(updateMyProfileSchema, "body"),
-  userController.updateMyProfile
+  userController.updateMyProfile,
 );
-
 
 userRouter.patch(
   "/password",
   validateRequest(updatePasswordSchema, "body"),
-  userController.updatePassword
+  userController.updatePassword,
 );
 
-
-  // ,
 userRouter.get(
   "/",
   authorize("ADMIN"),
-  validateRequest(userQueryValidate,"query"),
-  userController.getAllUsers
+  validateRequest(userQueryValidate, "query"),
+  userController.getAllUsers,
 );
 
-// userRouter.get(
-//   "/:id",
-//   authorize("ADMIN"),
-//   userController.getSingleUser
-// );
+userRouter.get(
+  "/:id",
+  authorize("ADMIN"),
+  validateRequest(validateIdSchema, "params"),
+  userController.getSingleUser,
+);
 
-// userRouter.patch(
-//   "/:id/status",
-//   authorize("ADMIN"),
-//   validateRequest(updateUserStatusSchema, "body"),
-//   userController.updateUserStatus
-// );
+
+/**
+ * admin only route 
+ * get : id, status from client
+ * validate id
+ * validate status within   ACTIVE | SUSPENDED | ARCHIVED
+ * send updated user to client
+ */
+
+userRouter.patch(
+  "/:id/status",
+  authorize("ADMIN"),
+  validateRequest(validateIdSchema, "params"),
+  validateRequest(updateUserStatusSchema, "body"),
+  userController.updateUserStatus
+);

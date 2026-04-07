@@ -43,4 +43,24 @@ export const userQueryValidate = z.object({
   page: z.coerce.number().int().min(1).optional(),
 });
 
-export type UserQueryType = z.infer<typeof userQueryValidate>
+export type UserQueryType = z.infer<typeof userQueryValidate>;
+
+export const validateIdSchema = z.object({
+  id: z.string().pipe(z.uuid("Invalid id format")),
+});
+
+export type IdParamsType = z.infer<typeof validateIdSchema>;
+
+export const updateUserStatusSchema = z.object({
+  status: z
+    .string()
+    .trim()
+    .min(1, "Status is required")
+    .transform((val) => val.toUpperCase())
+    .pipe(
+      z.enum(["ACTIVE", "SUSPENDED", "ARCHIVED"], {
+        error: "Invalid user status",
+      }),
+    ),
+});
+export type UpdateUserStatusType = z.infer<typeof updateUserStatusSchema>;
