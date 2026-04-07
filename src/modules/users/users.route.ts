@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { userController } from "./users.controller.js";
 import { validateRequest } from "../../app/middleware/validation.middleware.js";
-import { updateMyProfileSchema, updatePasswordSchema } from "./users.validation.js";
+import { updateMyProfileSchema, updatePasswordSchema, userQueryValidate } from "./users.validation.js";
+import { authorize } from "../../app/middleware/authorize.middleware.js";
 
 export const userRouter = Router()
 
@@ -25,13 +26,13 @@ userRouter.patch(
 );
 
 
-
-// userRouter.get(
-//   "/",
-//   authorize("ADMIN"),
-//   validateRequest(getUsersQuerySchema, "query"),
-//   userController.getAllUsers
-// );
+  // ,
+userRouter.get(
+  "/",
+  authorize("ADMIN"),
+  validateRequest(userQueryValidate,"query"),
+  userController.getAllUsers
+);
 
 // userRouter.get(
 //   "/:id",

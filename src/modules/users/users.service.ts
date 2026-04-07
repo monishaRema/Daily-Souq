@@ -1,8 +1,9 @@
+
 import { config } from "../../app/config/env.js";
 import { AppError } from "../../shared/errors/AppError.js";
 import { userRepo } from "./users.repository.js";
 import { UpdateProfileDataType } from "./users.types.js";
-import { UpdateMyProfileType, UpdatePasswordType } from "./users.validation.js";
+import { UpdateMyProfileType, UpdatePasswordType, UserQueryType } from "./users.validation.js";
 import bcrypt from "bcryptjs";
 
 async function getMyProfile(id: string) {
@@ -63,13 +64,22 @@ async function updatePassword(id: string, payload: UpdatePasswordType) {
     payload.newPassword,
     config.BCRYPT_SALT_ROUNDS,
   );
-  const result = await userRepo.updatePassword(id, passwordHash);
+  await userRepo.updatePassword(id, passwordHash);
 
-  return result;
+ 
+}
+
+async function getAllUsers(query: UserQueryType) {
+  const take = query.limit ?? 10;
+  const page = query.page ?? 1;
+  const skip = (page - 1) * take;
+
+  return await userRepo.getAllUsers(take, skip );
 }
 
 export const userService = {
   getMyProfile,
   updateMyProfile,
   updatePassword,
+  getAllUsers
 };

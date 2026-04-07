@@ -1,3 +1,4 @@
+import { SortOrder } from "./../../../generated/prisma/internal/prismaNamespace";
 import { Prisma } from "../../../generated/prisma/client.js";
 import { UserUpdateInput } from "../../../generated/prisma/models.js";
 import { prisma } from "../../shared/lib/prisma.js";
@@ -34,32 +35,53 @@ async function updateMyProfile(id: string, data: Partial<UserUpdateInput>) {
   });
 }
 
-async function findUserWithPasswordById(id:string){
+async function findUserWithPasswordById(id: string) {
   return prisma.user.findUnique({
-    where:{
-      id
-    }
-  })
+    where: {
+      id,
+    },
+  });
 }
 
-
-async function updatePassword(id:string, hashedPass:string) {
+async function updatePassword(id: string, hashedPass: string) {
   return prisma.user.update({
-    data:{
-      passwordHash:hashedPass
+    data: {
+      passwordHash: hashedPass,
     },
-    where:{
-      id
+    where: {
+      id,
     },
     select: safeUserSelect,
+  });
+}
 
-  })
-  
+async function getAllUsers(take: number, skip: number) {
+  const totalUserCount = await prisma.user.count({});
+
+  const users = await prisma.user.findMany({
+    select: safeUserSelect,
+    take: take,
+    skip: skip,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return {
+    data: users,
+    meta: {
+      page: (skip / take) + 1,
+      limit: take,
+      totalItems: totalUserCount,
+      totalPages: Math.ceil(totalUserCount / take),
+    },
+  };
 }
 
 export const userRepo = {
   getMyProfile,
   updateMyProfile,
   updatePassword,
-  findUserWithPasswordById
+  findUserWithPasswordById,
+  getAllUsers,
 };

@@ -6,7 +6,7 @@ export const validateRequest = (
   schema: z.ZodTypeAny,
   reqParts: "body" | "params" | "query",
 ) => {
-  return (req: Request, _res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const parsedSchema = schema.safeParse(req[reqParts]);
 
     if (!parsedSchema.success) {
@@ -19,7 +19,14 @@ export const validateRequest = (
       return next(new AppError(400, "Validation failed", formatError));
     }
 
-    req[reqParts] = parsedSchema.data;
+
+     if (reqParts === "query") {
+      res.locals.validated ??= {};
+      res.locals.validated.query = parsedSchema.data;
+    } else {
+      req[reqParts] = parsedSchema.data;
+    }
+
     next();
   };
 };

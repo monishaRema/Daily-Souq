@@ -37,3 +37,10 @@ export const updatePasswordSchema = z.object({
 });
 
 export type UpdatePasswordType = z.infer<typeof updatePasswordSchema>;
+
+export const userQueryValidate = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+});
+
+export type UserQueryType = z.infer<typeof userQueryValidate>
